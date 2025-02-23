@@ -47,11 +47,7 @@ jobs:
         run: |
           echo "deploying to qa"
 
-  cleanup:
-    needs: build-and-test
-    runs-on: ubuntu-latest
-    if: always()
-    steps:
-      - name: Remove Temp EC2 
+      - name: Remove Temp EC2
+        if: always()
         run: |
           aws ec2 terminate-instances --instance-ids $INSTANCE_ID
