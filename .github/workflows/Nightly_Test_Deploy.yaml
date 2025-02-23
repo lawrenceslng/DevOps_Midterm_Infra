@@ -6,8 +6,8 @@ on:
   workflow_dispatch:  # Allows manual trigger
 
 jobs:
-  test:
-    name: Run Tests
+  build-and-test:
+    name: Build and Test in EC2
     runs-on: ubuntu-latest
 
     steps:
@@ -26,4 +26,28 @@ jobs:
 
       - name: Create Temp EC2 for Verification
         run: |
-          aws ec2 run-instances --image-id ami-05b10e08d247fb927 --count 1 --instance-type t2.micro --key-name vockey --security-group-ids sg-0a9e436f893e4e5e8
+          INSTANCE_ID=$(aws ec2 run-instances --image-id ami-05b10e08d247fb927 --count 1 --instance-type t2.micro --key-name vockey --security-group-ids sg-0a9e436f893e4e5e8)
+          echo "INSTANCE_ID=$INSTANCE_ID" >> $GITHUB_ENV
+          sleep 15 # Wait for EC2 to be ready
+      
+      ### Run some tests in EC2
+
+      ### If success, push to ECR
+      - name: push-to-ecr
+        if: success()
+        run: |
+          echo "pushing to ecr"
+
+      - name: deploy-to-qa-ec2
+        if: success()
+        run: |
+          echo "deploying to qa"
+
+  cleanup:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Remove Temp EC2 
+        run: |
+          aws ec2 terminate-instances --instance-ids $INSTANCE_ID
