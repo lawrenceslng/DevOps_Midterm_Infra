@@ -1,0 +1,29 @@
+name: Nightly Build, Test, and Deploy
+
+on:
+  schedule:
+    - cron: "0 8 * * *"  # Runs every day at 12 AM Pacific time
+  workflow_dispatch:  # Allows manual trigger
+
+jobs:
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          repository: lawrenceslng/DevOps_Midterm_SPA
+      
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: us-east-1
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+
+      - name: Create Temp EC2 for Verification
+        run: |
+          aws ec2 run-instances --image-id ami-05b10e08d247fb927 --count 1 --instance-type t2.micro --key-name vockey --security-group-ids sg-0a9e436f893e4e5e8
