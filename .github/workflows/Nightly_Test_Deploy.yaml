@@ -82,7 +82,7 @@ jobs:
           TAGTAG: ${{ env.TAG }}
         run: |
           echo "Running build and push script"
-          ./infra/scripts/build-and-push.sh app-repo
+          ./infra/scripts/build_and_push.sh app-repo
 
       - name: deploy-to-qa-ec2
         if: success()
