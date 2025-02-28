@@ -31,6 +31,7 @@ jobs:
             --instance-type t2.micro \
             --subnet-id subnet-06ad5d704458ea4d2 \
             --security-group-ids sg-0432f9c58280ae894 \
+            --associate-public-ip-address \
             --query 'Instances[0].InstanceId' --output text)
           echo "INSTANCE_ID=$INSTANCE_ID" >> $GITHUB_ENV
           sleep 15 # Wait for EC2 to be ready
