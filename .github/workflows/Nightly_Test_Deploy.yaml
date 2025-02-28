@@ -27,27 +27,64 @@ jobs:
       - name: Create Temp EC2 for Verification
         run: |
           INSTANCE_ID=$(aws ec2 run-instances \
-            --image-id ami-05b10e08d247fb927 \
+            --image-id ami-04e075b5b72c4f803 \
             --instance-type t2.micro \
             --security-group-ids sg-0a9e436f893e4e5e8 \
             --query 'Instances[0].InstanceId' --output text)
           echo "INSTANCE_ID=$INSTANCE_ID" >> $GITHUB_ENV
           sleep 15 # Wait for EC2 to be ready
       
-      ### Run some tests in EC2
+      ### Login to EC2 and Run some tests in EC2
 
-      ### If success, push to ECR
-      - name: push-to-ecr
-        if: success()
+      - name: Remove Temp EC2
+        if: always()
         run: |
-          echo "pushing to ecr"
+          aws ec2 terminate-instances --instance-ids $INSTANCE_ID
+
+   ### If tests success, push to ECR + deploy to QA
+  push-and-deploy:
+    name: Push to ECR and Deploy to QA
+    needs: build-and-test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Infrastructure Repository
+        uses: actions/checkout@v4
+          path: infra
+
+      - name: Checkout App Repository
+        uses: actions/checkout@v4
+        with:
+          repository: lawrenceslng/DevOps_Midterm_SPA
+          path: app-repo
+      
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: ${{ secrets.AWS_ACCOUNT_REGION }}
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+
+      - name: Set DateTime Tag
+        run: |
+          echo "TAG=$(date +'%Y%m%d%H%M%S')" >> $GITHUB_ENV
+     
+      - name: Make build-and-push.sh executable
+        run: |
+          chmod +x infra/scripts/build_and_push.sh  # Updated path
+      
+      - name: Run Build and Push Script
+        env:
+          AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
+          AWS_REGION: ${{ secrets.AWS_ACCOUNT_REGION }}
+          TAGTAG: ${{ env.TAG }}
+        run: |
+          echo "Running build and push script"
+          ./infra/scripts/build-and-push.sh app-repo
 
       - name: deploy-to-qa-ec2
         if: success()
         run: |
           echo "deploying to qa"
 
-      - name: Remove Temp EC2
-        if: always()
-        run: |
-          aws ec2 terminate-instances --instance-ids $INSTANCE_ID
