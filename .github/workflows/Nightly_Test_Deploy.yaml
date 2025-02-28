@@ -50,6 +50,7 @@ jobs:
     steps:
       - name: Checkout Infrastructure Repository
         uses: actions/checkout@v4
+        with:
           path: infra
 
       - name: Checkout App Repository
