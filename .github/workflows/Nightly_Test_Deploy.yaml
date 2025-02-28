@@ -29,7 +29,7 @@ jobs:
           INSTANCE_ID=$(aws ec2 run-instances \
             --image-id ami-04e075b5b72c4f803 \
             --instance-type t2.micro \
-            --security-group-ids sg-0a9e436f893e4e5e8 \
+            --security-group-ids sg-0432f9c58280ae894 \
             --query 'Instances[0].InstanceId' --output text)
           echo "INSTANCE_ID=$INSTANCE_ID" >> $GITHUB_ENV
           sleep 15 # Wait for EC2 to be ready
