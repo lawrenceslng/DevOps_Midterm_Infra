@@ -78,6 +78,10 @@ jobs:
           AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
           AWS_ACCOUNT_REGION: ${{ secrets.AWS_ACCOUNT_REGION }}
           EC2_SSH_PRIVATE_KEY: ${{ secrets.SSH_KEY }}
+          DB_HOST: ${{ secrets.TEMP_DB_HOST }}
+          DB_NAME: ${{ secrets.TEMP_DB_NAME }}
+          DB_PASSWORD: ${{ secrets.TEMP_DB_PASSWORD }}
+          DB_USER: ${{ secrets.TEMP_DB_USER }}
         run: ./infra/scripts/copy_to_temp_ec2.sh
 
       # - name: Setup and Run Tests in EC2
