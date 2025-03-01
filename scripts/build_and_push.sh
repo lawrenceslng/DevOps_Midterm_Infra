@@ -7,7 +7,7 @@ APP_REPO_PATH=$1
 # Build the frontend Docker image
 docker build --target=production -t devops-midterm-frontend:latest -t devops-midterm-frontend:"$TAG" "$APP_REPO_PATH/client/build"
 # Build the backend Docker image
-docker build -t devops-midterm-backend:latest -t devops-midterm-backend:"$TAG" "$APP_REPO_PATH/server"
+docker build --target=production -t devops-midterm-backend:latest -t devops-midterm-backend:"$TAG" "$APP_REPO_PATH/server"
 
 # Tag and push the image to ECR
 docker tag devops-midterm-frontend:latest "$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/midterm-frontend:latest"
