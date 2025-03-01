@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  backend:
+    image: ${ECR_REGISTRY}/${ECR_REPOSITORY_BACKEND}:${IMAGE_TAG:-latest}
+    expose:
+      - 3001
+    networks:
+      - app-network
+    environment:
+      - NODE_ENV=production
+      - DB_HOST=${RDS_HOSTNAME}
+      - DB_USER=${RDS_USERNAME}
+      - DB_PASSWORD=${RDS_PASSWORD}
+      - DB_NAME=${RDS_DB_NAME}
+      - DB_PORT=${RDS_PORT:-3306}
+    restart: unless-stopped
+    
+  frontend:
+    image: ${ECR_REGISTRY}/${ECR_REPOSITORY_FRONTEND}:${IMAGE_TAG:-latest}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /etc/letsencrypt:/etc/nginx/ssl:ro
+    networks:
+      - app-network
+    depends_on:
+      - backend
+    environment:
+      - NODE_ENV=production
+    restart: unless-stopped
+
+networks:
+  app-network:
+    driver: bridge
