@@ -45,7 +45,13 @@ DB_PASSWORD=
 DB_NAME=$DB_NAME
 EOL
 
+# Send Github Token to Temp EC2 for making requests
 echo "$GITHUB_PAT" > deploy/github_token.txt
+
+# Send AWS Credentials to Temp EC2 to auth for self-termination
+echo "$AWS_ACCESS_KEY_ID" > deploy/aws_access_key_id.txt
+echo "$AWS_SECRET_ACCESS_KEY" > deploy/aws_secret_access_key.txt
+echo "$AWS_SESSION_TOKEN" > deploy/aws_session_token.txt
 
 # Copy all files to EC2
 scp -i key.pem -o StrictHostKeyChecking=no -r deploy/* ec2-user@${PUBLIC_IP}:/home/ec2-user/

@@ -1,7 +1,10 @@
 #!/bin/bash
 
 # GitHub and Repository Configuration
-GITHUB_TOKEN=$(cat github_token.txt)
+GITHUB_TOKEN=$(cat github_token.txt) # might need to see if $ is somehow prepended
+AWS_ACCESS_KEY_ID=$(cat aws_access_key_id.txt) # might need to see if $ is somehow prepended
+AWS_SECRET_ACCESS_KEY=$(cat aws_secret_access_key.txt) # might need to see if $ is somehow prepended
+AWS_SESSION_TOKEN=$(cat aws_session_token.txt) # might need to see if $ is somehow prepended
 
 # Function to trigger GitHub workflow
 trigger_workflow() {
@@ -17,6 +20,9 @@ trigger_workflow() {
 
 # Function to terminate EC2 instance
 terminate_instance() {
+  aws configure set aws_access_key_id ${AWS_ACCESS_KEY_ID}
+  aws configure set aws_secret_access_key ${AWS_SECRET_ACCESS_KEY}
+  aws configure set aws_session_token ${AWS_SESSION_TOKEN}
   # Get instance ID from metadata service
   INSTANCE_ID=$(curl -s http://169.254.169.254/latest/meta-data/instance-id)
   # Terminate the instance
@@ -31,7 +37,7 @@ if curl -f http://localhost > /dev/null 2>&1; then
   if [[ "$HEALTH_RESPONSE" == *"Health status OK!!"* ]]; then
     echo "Backend is accessible and healthy"
     # Trigger Deploy to QA workflow
-    trigger_workflow "Deploy_To_QA"
+    trigger_workflow "Deploy_To_QA.yaml"
     # Terminate the instance
     terminate_instance
     exit 0
@@ -39,7 +45,7 @@ if curl -f http://localhost > /dev/null 2>&1; then
     echo "Backend health check failed: Unexpected response"
     echo "Got: $HEALTH_RESPONSE"
     # Trigger Delete from ECR workflow
-    trigger_workflow "Delete_From_ECR"
+    trigger_workflow "Delete_From_ECR.yaml"
     # Terminate the instance
     terminate_instance
     exit 1
@@ -47,7 +53,7 @@ if curl -f http://localhost > /dev/null 2>&1; then
 else
   echo "Frontend is not accessible"
   # Trigger Delete from ECR workflow
-  trigger_workflow "Delete_From_ECR"
+  trigger_workflow "Delete_From_ECR.yaml"
   # Terminate the instance
   terminate_instance
   exit 1

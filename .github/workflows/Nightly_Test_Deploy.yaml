@@ -86,8 +86,11 @@ jobs:
           PUBLIC_IP: ${{ env.PUBLIC_IP }}
           AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
           AWS_ACCOUNT_REGION: ${{ secrets.AWS_ACCOUNT_REGION }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_SESSION_TOKEN: ${{ secrets.AWS_SESSION_TOKEN }}
           EC2_SSH_PRIVATE_KEY: ${{ secrets.SSH_KEY }}
-          GITHUB_PAT: $${{ secrets.MY_GITHUB_PAT }}
+          GITHUB_PAT: ${{ secrets.MY_GITHUB_PAT }}
           DB_HOST: ${{ secrets.TEMP_DB_HOST }}
           DB_NAME: ${{ secrets.TEMP_DB_NAME }}
           DB_PASSWORD: ${{ secrets.TEMP_DB_PASSWORD }}
