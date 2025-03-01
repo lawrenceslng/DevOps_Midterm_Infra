@@ -98,14 +98,22 @@ jobs:
         run: |
           chmod +x infra/scripts/build_and_push.sh
 
-      - name: Run Build and Push Script
-        env:
-          AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
-          AWS_REGION: ${{ secrets.AWS_ACCOUNT_REGION }}
-          TAG: ${{ env.TAG }}
+      - name: Try basics
         run: |
-          echo "Running build and push script"
-          ./infra/scripts/build_and_push.sh app-repo
+          docker build -t devops-midterm-frontend:latest -t devops-midterm-frontend:"${{ env.TAG }}" app-repo/client
+          docker tag devops-midterm-frontend:latest "${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_ACCOUNT_REGION }}.amazonaws.com/midterm-frontend:latest"
+          docker tag devops-midterm-frontend:"${{ env.TAG }}" "${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_ACCOUNT_REGION }}.amazonaws.com/midterm-frontend:${{ env.TAG }}"
+          docker push "${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_ACCOUNT_REGION }}.amazonaws.com/midterm-frontend:latest"
+          docker push "${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_ACCOUNT_REGION }}.amazonaws.com/midterm-frontend:${{ env.TAG }}"
+
+      # - name: Run Build and Push Script
+      #   env:
+      #     AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
+      #     AWS_REGION: ${{ secrets.AWS_ACCOUNT_REGION }}
+      #     TAG: ${{ env.TAG }}
+      #   run: |
+      #     echo "Running build and push script"
+      #     ./infra/scripts/build_and_push.sh app-repo
 
       # - name: Setup EC2
       #   run: |
