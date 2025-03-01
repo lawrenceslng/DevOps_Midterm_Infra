@@ -5,7 +5,7 @@ APP_REPO_PATH=$1
 # aws ecr get-login-password --region "$AWS_REGION" | docker login --username AWS --password-stdin "$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com"
 
 # Build the frontend Docker image
-docker build --target=production -t devops-midterm-frontend:latest -t devops-midterm-frontend:"$TAG" "$APP_REPO_PATH/client/build"
+docker build -t devops-midterm-frontend:latest -t devops-midterm-frontend:"$TAG" "$APP_REPO_PATH/client"
 # Build the backend Docker image
 docker build --target=production -t devops-midterm-backend:latest -t devops-midterm-backend:"$TAG" "$APP_REPO_PATH/server"
 
