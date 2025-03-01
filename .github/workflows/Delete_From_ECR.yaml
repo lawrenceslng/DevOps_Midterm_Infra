@@ -4,7 +4,7 @@ on:
 
 jobs:
   push-to-ecr:
-    name: Push Images to ECR
+    name: Delete Images From ECR
     runs-on: ubuntu-latest
 
     steps:
@@ -37,7 +37,7 @@ jobs:
 
           # Identify latest and previous tag
           LATEST_BE_TAG="${IMAGE_TAGS[0]}"
-          PREVIOUS_BE_TAG="${IMAGE_TAGS[1]}"
+          PREVIOUS_BE_TAG="${IMAGE_TAGS[2]}"
 
           echo "Latest BE Tag: $LATEST_BE_TAG"
           echo "Previous BE Tag: $PREVIOUS_BE_TAG"
@@ -55,8 +55,8 @@ jobs:
           IMAGE_TAGS=($(echo $IMAGES_JSON | jq -r '.[].imageTags[]' | sort -r))
 
           # Identify latest and previous tag
-          LATEST_FE_TAG="${IMAGE_TAGS[0]}"
-          PREVIOUS_FE_TAG="${IMAGE_TAGS[1]}"
+          LATEST_FE_TAG="${IMAGE_TAGS[1]}"
+          PREVIOUS_FE_TAG="${IMAGE_TAGS[2]}"
 
           echo "Latest FE Tag: $LATEST_FE_TAG"
           echo "Previous FE Tag: $PREVIOUS_FE_TAG"
@@ -70,11 +70,17 @@ jobs:
           REGION="us-east-1"
 
           aws ecr batch-delete-image --repository-name $REPO_NAME --region $REGION --image-ids imageTag=$LATEST_BE_TAG
+          aws ecr batch-delete-image --repository-name $REPO_NAME --region $REGION --image-ids imageTag=latest
 
           REPO_NAME="midterm-frontend"  # Change this
           REGION="us-east-1"
 
           aws ecr batch-delete-image --repository-name $REPO_NAME --region $REGION --image-ids imageTag=$LATEST_FE_TAG
+          aws ecr batch-delete-image --repository-name $REPO_NAME --region $REGION --image-ids imageTag=latest
+
+      - name: Set DateTime Tag
+        run: |
+          echo "TAG=$(date +'%Y%m%d%H%M%S')" >> $GITHUB_ENV
 
       - name: Re-tag previous image as latest
         run: |
@@ -84,6 +90,7 @@ jobs:
           aws ecr batch-get-image --repository-name $REPO_NAME --region $REGION --image-ids imageTag=$PREVIOUS_BE_TAG --query 'images[].imageManifest' --output text > image-manifest.json
 
           aws ecr put-image --repository-name $REPO_NAME --region $REGION --image-tag latest --image-manifest file://image-manifest.json
+          aws ecr put-image --repository-name $REPO_NAME --region $REGION --image-tag $TAG --image-manifest file://image-manifest.json
 
           REPO_NAME="midterm-frontend"  # Change this
           REGION="us-east-1"
@@ -91,6 +98,7 @@ jobs:
           aws ecr batch-get-image --repository-name $REPO_NAME --region $REGION --image-ids imageTag=$PREVIOUS_FE_TAG --query 'images[].imageManifest' --output text > image-manifest.json
 
           aws ecr put-image --repository-name $REPO_NAME --region $REGION --image-tag latest --image-manifest file://image-manifest.json
+          aws ecr put-image --repository-name $REPO_NAME --region $REGION --image-tag $TAG --image-manifest file://image-manifest.json
 
       - name: Cleanup local Docker images
         run: docker system prune -af
