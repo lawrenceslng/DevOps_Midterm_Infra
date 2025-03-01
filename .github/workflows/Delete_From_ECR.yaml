@@ -1,16 +1,16 @@
-name: Delete Images From ECR
+name: Delete Image From ECR
 on:
   workflow_dispatch:  # Allows manual trigger
 
 jobs:
-  delete-ecr-images:
-    name: Delete Latest Images and Retag Previous as Latest
+  push-to-ecr:
+    name: Push Images to ECR
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout Infrastructure Repository
         uses: actions/checkout@v4
-
+      
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -26,50 +26,71 @@ jobs:
       - name: Get latest and previous image tags for both repos
         id: get-tags
         run: |
-          REPO_NAMES=("midterm-backend" "midterm-frontend")
+          REPO_NAME="midterm-backend"  # Change this to your repo name
           REGION="us-east-1"
+
+          # Fetch all image tags sorted by pushedAt timestamp
+          IMAGES_JSON=$(aws ecr describe-images --repository-name $REPO_NAME --region $REGION --query "imageDetails | sort_by(@, &imagePushedAt) | reverse(@)" --output json)
           
-          for REPO_NAME in "${REPO_NAMES[@]}"; do
-            echo "Fetching image tags for $REPO_NAME"
-            IMAGES_JSON=$(aws ecr describe-images --repository-name $REPO_NAME --region $REGION --query "imageDetails | sort_by(@, &imagePushedAt) | reverse(@)" --output json)
-            IMAGE_TAGS=($(echo $IMAGES_JSON | jq -r '.[].imageTags[]' | sort -r))
+          # Extract tags
+          IMAGE_TAGS=($(echo $IMAGES_JSON | jq -r '.[].imageTags[]' | sort -r))
 
-            if [ ${#IMAGE_TAGS[@]} -lt 2 ]; then
-              echo "Error: Not enough images in ECR repository $REPO_NAME"
-              exit 1
-            fi
+          # Identify latest and previous tag
+          LATEST_BE_TAG="${IMAGE_TAGS[0]}"
+          PREVIOUS_BE_TAG="${IMAGE_TAGS[1]}"
 
-            LATEST_TAG="${IMAGE_TAGS[0]}"
-            PREVIOUS_TAG="${IMAGE_TAGS[1]}"
+          echo "Latest BE Tag: $LATEST_BE_TAG"
+          echo "Previous BE Tag: $PREVIOUS_BE_TAG"
 
-            echo "LATEST_TAG_$REPO_NAME=$LATEST_TAG" >> $GITHUB_ENV
-            echo "PREVIOUS_TAG_$REPO_NAME=$PREVIOUS_TAG" >> $GITHUB_ENV
-          done
+          echo "LATEST_BE_TAG=$LATEST_BE_TAG" >> $GITHUB_ENV
+          echo "PREVIOUS_BE_TAG=$PREVIOUS_BE_TAG" >> $GITHUB_ENV
+
+          REPO_NAME="midterm-frontend"  # Change this to your repo name
+          REGION="us-east-1"
+
+          # Fetch all image tags sorted by pushedAt timestamp
+          IMAGES_JSON=$(aws ecr describe-images --repository-name $REPO_NAME --region $REGION --query "imageDetails | sort_by(@, &imagePushedAt) | reverse(@)" --output json)
+          
+          # Extract tags
+          IMAGE_TAGS=($(echo $IMAGES_JSON | jq -r '.[].imageTags[]' | sort -r))
+
+          # Identify latest and previous tag
+          LATEST_FE_TAG="${IMAGE_TAGS[0]}"
+          PREVIOUS_FE_TAG="${IMAGE_TAGS[1]}"
+
+          echo "Latest FE Tag: $LATEST_FE_TAG"
+          echo "Previous FE Tag: $PREVIOUS_FE_TAG"
+
+          echo "LATEST_FE_TAG=$LATEST_FE_TAG" >> $GITHUB_ENV
+          echo "PREVIOUS_FE_TAG=$PREVIOUS_FE_TAG" >> $GITHUB_ENV
 
       - name: Delete latest image tag from both repos
         run: |
-          REPO_NAMES=("midterm-backend" "midterm-frontend")
+          REPO_NAME="midterm-backend"  # Change this
           REGION="us-east-1"
 
-          for REPO_NAME in "${REPO_NAMES[@]}"; do
-            LATEST_TAG="${{ env.LATEST_TAG_$REPO_NAME }}"
+          aws ecr batch-delete-image --repository-name $REPO_NAME --region $REGION --image-ids imageTag=$LATEST_BE_TAG
 
-            echo "Deleting $LATEST_TAG from $REPO_NAME"
-            aws ecr batch-delete-image --repository-name $REPO_NAME --region $REGION --image-ids imageTag=$LATEST_TAG
-          done
+          REPO_NAME="midterm-frontend"  # Change this
+          REGION="us-east-1"
+
+          aws ecr batch-delete-image --repository-name $REPO_NAME --region $REGION --image-ids imageTag=$LATEST_FE_TAG
 
       - name: Re-tag previous image as latest
         run: |
-          REPO_NAMES=("midterm-backend" "midterm-frontend")
+          REPO_NAME="midterm-backend"  # Change this
           REGION="us-east-1"
 
-          for REPO_NAME in "${REPO_NAMES[@]}"; do
-            PREVIOUS_TAG="${{ env.PREVIOUS_TAG_$REPO_NAME }}"
+          aws ecr batch-get-image --repository-name $REPO_NAME --region $REGION --image-ids imageTag=$PREVIOUS_BE_TAG --query 'images[].imageManifest' --output text > image-manifest.json
 
-            echo "Re-tagging $PREVIOUS_TAG as latest for $REPO_NAME"
-            aws ecr batch-get-image --repository-name $REPO_NAME --region $REGION --image-ids imageTag=$PREVIOUS_TAG --query 'images[].imageManifest' --output text > image-manifest.json
-            aws ecr put-image --repository-name $REPO_NAME --region $REGION --image-tag latest --image-manifest file://image-manifest.json
-          done
+          aws ecr put-image --repository-name $REPO_NAME --region $REGION --image-tag latest --image-manifest file://image-manifest.json
+
+          REPO_NAME="midterm-frontend"  # Change this
+          REGION="us-east-1"
+
+          aws ecr batch-get-image --repository-name $REPO_NAME --region $REGION --image-ids imageTag=$PREVIOUS_FE_TAG --query 'images[].imageManifest' --output text > image-manifest.json
+
+          aws ecr put-image --repository-name $REPO_NAME --region $REGION --image-tag latest --image-manifest file://image-manifest.json
 
       - name: Cleanup local Docker images
         run: docker system prune -af
