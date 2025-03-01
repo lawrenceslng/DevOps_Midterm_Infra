@@ -36,7 +36,7 @@ jobs:
           IMAGE_TAGS=($(echo $IMAGES_JSON | jq -r '.[].imageTags[]' | sort -r))
 
           # Identify latest and previous tag
-          LATEST_BE_TAG="${IMAGE_TAGS[0]}"
+          LATEST_BE_TAG="${IMAGE_TAGS[1]}"
           PREVIOUS_BE_TAG="${IMAGE_TAGS[2]}"
 
           echo "Latest BE Tag: $LATEST_BE_TAG"
