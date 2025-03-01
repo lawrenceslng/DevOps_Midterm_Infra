@@ -11,10 +11,16 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Repository
+      - name: Checkout Infrastructure Repository
+        uses: actions/checkout@v4
+        with:
+          path: infra
+
+      - name: Checkout Source Repository
         uses: actions/checkout@v4
         with:
           repository: lawrenceslng/DevOps_Midterm_SPA
+          path: app-repo
 
       - name: Set up Node
         uses: actions/setup-node@v4
@@ -43,7 +49,7 @@ jobs:
 
       - name: Build the Nightly build
         run: |
-          cd client && npm ci && npm run build
+          cd app-repo/client && npm ci && npm run build
 
       # - name: Upload frontend build artifact
       #   uses: actions/upload-artifact@v3

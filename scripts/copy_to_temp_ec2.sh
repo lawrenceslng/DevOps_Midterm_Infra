@@ -13,10 +13,10 @@ chmod 600 key.pem
 mkdir -p deploy
 
 # Copy frontend build
-cp -r client/build deploy/frontend
+cp -r app-repo/client/build deploy/frontend
 
 # Copy backend code
-cp -r server deploy/backend
+cp -r app-repo/server deploy/backend
 
 # Copy docker-compose, nginx config, and scripts
 cp infra/configurations/docker-compose.prod.yml deploy/
