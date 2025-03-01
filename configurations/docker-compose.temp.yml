@@ -4,9 +4,6 @@ services:
   db:
     image: mysql:8.0
     command: --init-file /docker-entrypoint-initdb.d/setup.sql
-    environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-      MYSQL_DATABASE: ${MYSQL_DATABASE}
     ports:
       - "3306:3306"
     networks:
@@ -16,7 +13,8 @@ services:
       - ./data:/var/lib/mysql
 
   backend:
-    image: ${ECR_REGISTRY}/${ECR_REPOSITORY_BACKEND}:${IMAGE_TAG:-latest}
+    build:
+      context: ./backend
     ports:
       - 3001:3001
     networks:
@@ -24,7 +22,7 @@ services:
     depends_on:
       - db
     volumes:
-      - ./server:/app
+      - ./backend:/app
       - /app/node_modules
     environment:
       - NODE_ENV=production
@@ -33,13 +31,13 @@ services:
     image: nginx:latest
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf  # Mount your custom NGINX config file
-      - ./frontend/build:/usr/share/nginx/html  # Mount the React build folder as the static file location
+      - ./frontend:/usr/share/nginx/html  # Mount the React build folder as the static file location
     ports:
       - "80:80"  # Expose port 80 to the host for external access
     depends_on:
       - backend
     networks:
-      - app_network
+      - app-network
 
 networks:
   app-network:
