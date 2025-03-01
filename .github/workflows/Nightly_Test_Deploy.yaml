@@ -56,7 +56,7 @@ jobs:
           cd app-repo/client && npm ci && npm run build
 
       - name: Debug Build Output
-        run: ls -la app-repo/client
+        run: ls -la app-repo/client/build
 
 
       # - name: Upload frontend build artifact
@@ -102,13 +102,13 @@ jobs:
       #   run: |
       #     chmod +x infra/scripts/build_and_push.sh
 
-      # - name: Try basics
-      #   run: |
-      #     docker build -t devops-midterm-frontend:latest -t devops-midterm-frontend:"${{ env.TAG }}" app-repo/client
-      #     docker tag devops-midterm-frontend:latest "${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_ACCOUNT_REGION }}.amazonaws.com/midterm-frontend:latest"
-      #     docker tag devops-midterm-frontend:"${{ env.TAG }}" "${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_ACCOUNT_REGION }}.amazonaws.com/midterm-frontend:${{ env.TAG }}"
-      #     docker push "${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_ACCOUNT_REGION }}.amazonaws.com/midterm-frontend:latest"
-      #     docker push "${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_ACCOUNT_REGION }}.amazonaws.com/midterm-frontend:${{ env.TAG }}"
+      - name: Try basics
+        run: |
+          docker build -t devops-midterm-frontend:latest -t devops-midterm-frontend:${{ env.TAG }} -f app-repo/client/Dockerfile app-repo
+          docker tag devops-midterm-frontend:latest "${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_ACCOUNT_REGION }}.amazonaws.com/midterm-frontend:latest"
+          docker tag devops-midterm-frontend:"${{ env.TAG }}" "${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_ACCOUNT_REGION }}.amazonaws.com/midterm-frontend:${{ env.TAG }}"
+          docker push "${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_ACCOUNT_REGION }}.amazonaws.com/midterm-frontend:latest"
+          docker push "${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_ACCOUNT_REGION }}.amazonaws.com/midterm-frontend:${{ env.TAG }}"
 
       # - name: Run Build and Push Script
       #   env:
