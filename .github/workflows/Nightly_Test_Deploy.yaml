@@ -70,7 +70,7 @@ jobs:
         run: |
           chmod +x infra/scripts/setup_ec2.sh
           chmod +x infra/scripts/smoke_test.sh
-          chmod +x infra/scripts/copy_to_ec2.sh
+          chmod +x infra/scripts/copy_to_temp_ec2.sh
 
       - name: Copy files to EC2
         env:
