@@ -52,8 +52,12 @@ jobs:
           REGION="us-east-1"
 
           for REPO_NAME in "${REPO_NAMES[@]}"; do
-            LATEST_TAG_VAR="${REPO_NAME}_LATEST_TAG"
-            LATEST_TAG="${!LATEST_TAG_VAR}"
+            # Use explicit variable names
+            if [ "$REPO_NAME" == "midterm-backend" ]; then
+              LATEST_TAG="${midterm-backend_LATEST_TAG}"
+            elif [ "$REPO_NAME" == "midterm-frontend" ]; then
+              LATEST_TAG="${midterm-frontend_LATEST_TAG}"
+            fi
 
             echo "Deleting $LATEST_TAG from $REPO_NAME"
             aws ecr batch-delete-image --repository-name $REPO_NAME --region $REGION --image-ids imageTag=$LATEST_TAG
