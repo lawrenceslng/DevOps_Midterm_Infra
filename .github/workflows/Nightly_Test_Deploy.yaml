@@ -55,6 +55,10 @@ jobs:
         run: |
           cd app-repo/client && npm ci && npm run build
 
+      - name: Debug Build Output
+        run: ls -la app-repo/client
+
+
       # - name: Upload frontend build artifact
       #   uses: actions/upload-artifact@v4
       #   with:
@@ -94,17 +98,17 @@ jobs:
         run: |
           echo "TAG=$(date +'%Y%m%d%H%M%S')" >> $GITHUB_ENV
      
-      - name: Make build-and-push.sh executable
-        run: |
-          chmod +x infra/scripts/build_and_push.sh
+      # - name: Make build-and-push.sh executable
+      #   run: |
+      #     chmod +x infra/scripts/build_and_push.sh
 
-      - name: Try basics
-        run: |
-          docker build -t devops-midterm-frontend:latest -t devops-midterm-frontend:"${{ env.TAG }}" app-repo/client
-          docker tag devops-midterm-frontend:latest "${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_ACCOUNT_REGION }}.amazonaws.com/midterm-frontend:latest"
-          docker tag devops-midterm-frontend:"${{ env.TAG }}" "${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_ACCOUNT_REGION }}.amazonaws.com/midterm-frontend:${{ env.TAG }}"
-          docker push "${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_ACCOUNT_REGION }}.amazonaws.com/midterm-frontend:latest"
-          docker push "${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_ACCOUNT_REGION }}.amazonaws.com/midterm-frontend:${{ env.TAG }}"
+      # - name: Try basics
+      #   run: |
+      #     docker build -t devops-midterm-frontend:latest -t devops-midterm-frontend:"${{ env.TAG }}" app-repo/client
+      #     docker tag devops-midterm-frontend:latest "${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_ACCOUNT_REGION }}.amazonaws.com/midterm-frontend:latest"
+      #     docker tag devops-midterm-frontend:"${{ env.TAG }}" "${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_ACCOUNT_REGION }}.amazonaws.com/midterm-frontend:${{ env.TAG }}"
+      #     docker push "${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_ACCOUNT_REGION }}.amazonaws.com/midterm-frontend:latest"
+      #     docker push "${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_ACCOUNT_REGION }}.amazonaws.com/midterm-frontend:${{ env.TAG }}"
 
       # - name: Run Build and Push Script
       #   env:
