@@ -1,4 +1,4 @@
-name: Nightly Build, Test, and Deploy
+name: Nightly Build Deployment
 
 on:
   schedule:
@@ -30,10 +30,14 @@ jobs:
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          aws-region: us-east-1
+          aws-region: ${{ secrets.AWS_ACCOUNT_REGION }}
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
 
       - name: Create Temp EC2 for Verification
         run: |
@@ -52,10 +56,11 @@ jobs:
           cd app-repo/client && npm ci && npm run build
 
       # - name: Upload frontend build artifact
-      #   uses: actions/upload-artifact@v3
+      #   uses: actions/upload-artifact@v4
       #   with:
       #     name: frontend-build
       #     path: client/build/
+      #     overwrite: true
 
       - name: Wait for EC2 instance to be ready
         run: |
@@ -78,17 +83,37 @@ jobs:
           AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
           AWS_ACCOUNT_REGION: ${{ secrets.AWS_ACCOUNT_REGION }}
           EC2_SSH_PRIVATE_KEY: ${{ secrets.SSH_KEY }}
+          GITHUB_PAT: $${{ secrets.MY_GITHUB_PAT }}
           DB_HOST: ${{ secrets.TEMP_DB_HOST }}
           DB_NAME: ${{ secrets.TEMP_DB_NAME }}
           DB_PASSWORD: ${{ secrets.TEMP_DB_PASSWORD }}
           DB_USER: ${{ secrets.TEMP_DB_USER }}
         run: ./infra/scripts/copy_to_temp_ec2.sh
 
-      # - name: Setup and Run Tests in EC2
-      #   run: |
-      #     ssh -o StrictHostKeyChecking=no ec2-user@$PUBLIC_IP '
-      #       /home/ec2-user/setup_ec2.sh && /home/ec2-user/smoke_test.sh
-      #     '
+      - name: Set DateTime Tag
+        run: |
+          echo "TAG=$(date +'%Y%m%d%H%M%S')" >> $GITHUB_ENV
+     
+      - name: Make build-and-push.sh executable
+        run: |
+          chmod +x infra/scripts/build_and_push.sh
+
+      - name: Run Build and Push Script
+        env:
+          AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
+          AWS_REGION: ${{ secrets.AWS_ACCOUNT_REGION }}
+          TAG: ${{ env.TAG }}
+        run: |
+          echo "Running build and push script"
+          ./infra/scripts/build_and_push.sh app-repo
+
+      - name: Setup EC2
+        run: |
+          echo "$EC2_SSH_PRIVATE_KEY" | base64 --decode > key.pem
+          chmod 600 key.pem
+          ssh -i key.pem -o StrictHostKeyChecking=no ec2-user@$PUBLIC_IP '
+            /home/ec2-user/setup_ec2.sh && /home/ec2-user/local_smoke_test.sh'
+
 
       # - name: Remove Temp EC2
       #   if: always()

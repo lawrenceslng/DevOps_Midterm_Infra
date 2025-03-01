@@ -41,9 +41,11 @@ cp infra/scripts/local_smoke_test.sh deploy/
 cat > deploy/backend/.env << EOL
 DB_HOST=$DB_HOST
 DB_USER=$DB_USER
-DB_PASSWORD=$DB_PASSWORD
+DB_PASSWORD=
 DB_NAME=$DB_NAME
 EOL
+
+echo "$GITHUB_PAT" > deploy/github_token.txt
 
 # Copy all files to EC2
 scp -i key.pem -o StrictHostKeyChecking=no -r deploy/* ec2-user@${PUBLIC_IP}:/home/ec2-user/

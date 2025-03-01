@@ -2,10 +2,10 @@
 APP_REPO_PATH=$1
 
 # Authenticate with AWS ECR
-aws ecr get-login-password --region "$AWS_REGION" | docker login --username AWS --password-stdin "$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com"
+# aws ecr get-login-password --region "$AWS_REGION" | docker login --username AWS --password-stdin "$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com"
 
 # Build the frontend Docker image
-docker build -t devops-midterm-frontend:latest -t devops-midterm-frontend:"$TAG" "$APP_REPO_PATH/client"
+docker build --target=production -t devops-midterm-frontend:latest -t devops-midterm-frontend:"$TAG" "$APP_REPO_PATH/client/build"
 # Build the backend Docker image
 docker build -t devops-midterm-backend:latest -t devops-midterm-backend:"$TAG" "$APP_REPO_PATH/server"
 
@@ -22,4 +22,4 @@ docker push "$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/midterm-frontend:
 docker push "$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/midterm-backend:latest"
 docker push "$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/midterm-backend:$TAG"
 
-echo "Docker image successfully pushed to ECR."
+echo "Docker images successfully pushed to ECR."
