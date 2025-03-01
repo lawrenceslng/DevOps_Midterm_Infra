@@ -39,17 +39,17 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
-      - name: Create Temp EC2 for Verification
-        run: |
-          INSTANCE_ID=$(aws ec2 run-instances \
-            --image-id ami-0d2cec4407f209198 \
-            --instance-type t2.micro \
-            --subnet-id subnet-06ad5d704458ea4d2 \
-            --security-group-ids sg-0432f9c58280ae894 \
-            --associate-public-ip-address \
-            --query 'Instances[0].InstanceId' --output text)
-          echo "INSTANCE_ID=$INSTANCE_ID" >> $GITHUB_ENV
-          sleep 15 # Wait for EC2 to be ready
+      # - name: Create Temp EC2 for Verification
+      #   run: |
+      #     INSTANCE_ID=$(aws ec2 run-instances \
+      #       --image-id ami-0d2cec4407f209198 \
+      #       --instance-type t2.micro \
+      #       --subnet-id subnet-06ad5d704458ea4d2 \
+      #       --security-group-ids sg-0432f9c58280ae894 \
+      #       --associate-public-ip-address \
+      #       --query 'Instances[0].InstanceId' --output text)
+      #     echo "INSTANCE_ID=$INSTANCE_ID" >> $GITHUB_ENV
+      #     sleep 15 # Wait for EC2 to be ready
 
       - name: Build the Nightly build
         run: |
@@ -62,33 +62,33 @@ jobs:
       #     path: client/build/
       #     overwrite: true
 
-      - name: Wait for EC2 instance to be ready
-        run: |
-          aws ec2 wait instance-running --instance-ids $INSTANCE_ID
-          PUBLIC_IP=$(aws ec2 describe-instances \
-            --instance-ids $INSTANCE_ID \
-            --query 'Reservations[0].Instances[0].PublicIpAddress' \
-            --output text)
-          echo "PUBLIC_IP=$PUBLIC_IP" >> $GITHUB_ENV
+      # - name: Wait for EC2 instance to be ready
+      #   run: |
+      #     aws ec2 wait instance-running --instance-ids $INSTANCE_ID
+      #     PUBLIC_IP=$(aws ec2 describe-instances \
+      #       --instance-ids $INSTANCE_ID \
+      #       --query 'Reservations[0].Instances[0].PublicIpAddress' \
+      #       --output text)
+      #     echo "PUBLIC_IP=$PUBLIC_IP" >> $GITHUB_ENV
 
-      - name: Make scripts executable
-        run: |
-          chmod +x infra/scripts/setup_ec2.sh
-          chmod +x infra/scripts/local_smoke_test.sh
-          chmod +x infra/scripts/copy_to_temp_ec2.sh
+      # - name: Make scripts executable
+      #   run: |
+      #     chmod +x infra/scripts/setup_ec2.sh
+      #     chmod +x infra/scripts/local_smoke_test.sh
+      #     chmod +x infra/scripts/copy_to_temp_ec2.sh
 
-      - name: Copy files to EC2
-        env:
-          PUBLIC_IP: ${{ env.PUBLIC_IP }}
-          AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
-          AWS_ACCOUNT_REGION: ${{ secrets.AWS_ACCOUNT_REGION }}
-          EC2_SSH_PRIVATE_KEY: ${{ secrets.SSH_KEY }}
-          GITHUB_PAT: $${{ secrets.MY_GITHUB_PAT }}
-          DB_HOST: ${{ secrets.TEMP_DB_HOST }}
-          DB_NAME: ${{ secrets.TEMP_DB_NAME }}
-          DB_PASSWORD: ${{ secrets.TEMP_DB_PASSWORD }}
-          DB_USER: ${{ secrets.TEMP_DB_USER }}
-        run: ./infra/scripts/copy_to_temp_ec2.sh
+      # - name: Copy files to EC2
+      #   env:
+      #     PUBLIC_IP: ${{ env.PUBLIC_IP }}
+      #     AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
+      #     AWS_ACCOUNT_REGION: ${{ secrets.AWS_ACCOUNT_REGION }}
+      #     EC2_SSH_PRIVATE_KEY: ${{ secrets.SSH_KEY }}
+      #     GITHUB_PAT: $${{ secrets.MY_GITHUB_PAT }}
+      #     DB_HOST: ${{ secrets.TEMP_DB_HOST }}
+      #     DB_NAME: ${{ secrets.TEMP_DB_NAME }}
+      #     DB_PASSWORD: ${{ secrets.TEMP_DB_PASSWORD }}
+      #     DB_USER: ${{ secrets.TEMP_DB_USER }}
+      #   run: ./infra/scripts/copy_to_temp_ec2.sh
 
       - name: Set DateTime Tag
         run: |
@@ -107,14 +107,14 @@ jobs:
           echo "Running build and push script"
           ./infra/scripts/build_and_push.sh app-repo
 
-      - name: Setup EC2
-        run: |
-          echo "${{ secrets.SSH_KEY }}" | base64 --decode > key.pem
-          chmod 600 key.pem
-          ssh -i key.pem -o StrictHostKeyChecking=no ec2-user@$PUBLIC_IP '
-            /home/ec2-user/setup_ec2.sh && /home/ec2-user/local_smoke_test.sh'
+      # - name: Setup EC2
+      #   run: |
+      #     echo "${{ secrets.SSH_KEY }}" | base64 --decode > key.pem
+      #     chmod 600 key.pem
+      #     ssh -i key.pem -o StrictHostKeyChecking=no ec2-user@$PUBLIC_IP '
+      #       /home/ec2-user/setup_ec2.sh && /home/ec2-user/local_smoke_test.sh'
 
-
+####################################
       # - name: Remove Temp EC2
       #   if: always()
       #   run: |
