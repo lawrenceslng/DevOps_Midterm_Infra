@@ -15,4 +15,4 @@ sudo systemctl stop nginx
 docker compose up -d
 
 # Wait for services to be ready
-sleep 15
+sleep 45
