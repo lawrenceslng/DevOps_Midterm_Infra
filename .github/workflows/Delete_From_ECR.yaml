@@ -42,8 +42,8 @@ jobs:
             LATEST_TAG="${IMAGE_TAGS[0]}"
             PREVIOUS_TAG="${IMAGE_TAGS[1]}"
 
-            echo "$REPO_NAME LATEST_TAG=$LATEST_TAG" >> $GITHUB_ENV
-            echo "$REPO_NAME PREVIOUS_TAG=$PREVIOUS_TAG" >> $GITHUB_ENV
+            echo "LATEST_TAG_$REPO_NAME=$LATEST_TAG" >> $GITHUB_ENV
+            echo "PREVIOUS_TAG_$REPO_NAME=$PREVIOUS_TAG" >> $GITHUB_ENV
           done
 
       - name: Delete latest image tag from both repos
@@ -52,12 +52,7 @@ jobs:
           REGION="us-east-1"
 
           for REPO_NAME in "${REPO_NAMES[@]}"; do
-            # Use explicit variable names
-            if [ "$REPO_NAME" == "midterm-backend" ]; then
-              LATEST_TAG="${midterm-backend_LATEST_TAG}"
-            elif [ "$REPO_NAME" == "midterm-frontend" ]; then
-              LATEST_TAG="${midterm-frontend_LATEST_TAG}"
-            fi
+            LATEST_TAG="${{ env.LATEST_TAG_$REPO_NAME }}"
 
             echo "Deleting $LATEST_TAG from $REPO_NAME"
             aws ecr batch-delete-image --repository-name $REPO_NAME --region $REGION --image-ids imageTag=$LATEST_TAG
@@ -69,18 +64,12 @@ jobs:
           REGION="us-east-1"
 
           for REPO_NAME in "${REPO_NAMES[@]}"; do
-            # Manually check and set the PREVIOUS_TAG for each repository
-            if [ "$REPO_NAME" == "midterm-backend" ]; then
-              PREVIOUS_TAG="${midterm-backend_PREVIOUS_TAG}"
-            elif [ "$REPO_NAME" == "midterm-frontend" ]; then
-              PREVIOUS_TAG="${midterm-frontend_PREVIOUS_TAG}"
-            fi
+            PREVIOUS_TAG="${{ env.PREVIOUS_TAG_$REPO_NAME }}"
 
             echo "Re-tagging $PREVIOUS_TAG as latest for $REPO_NAME"
             aws ecr batch-get-image --repository-name $REPO_NAME --region $REGION --image-ids imageTag=$PREVIOUS_TAG --query 'images[].imageManifest' --output text > image-manifest.json
             aws ecr put-image --repository-name $REPO_NAME --region $REGION --image-tag latest --image-manifest file://image-manifest.json
           done
-
 
       - name: Cleanup local Docker images
         run: docker system prune -af
