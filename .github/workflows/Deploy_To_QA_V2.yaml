@@ -78,6 +78,7 @@ jobs:
   deploy-to-qa:
     name: Deploy build to QA
     runs-on: self-hosted
+    needs: tag-latest
 
     steps:
       - name: Configure AWS credentials
