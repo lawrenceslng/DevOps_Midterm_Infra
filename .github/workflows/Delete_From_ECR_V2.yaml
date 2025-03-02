@@ -1,4 +1,4 @@
-name: Delete Image From ECR
+name: Delete Image From ECR V2
 on:
   workflow_dispatch:  # Allows manual trigger
 

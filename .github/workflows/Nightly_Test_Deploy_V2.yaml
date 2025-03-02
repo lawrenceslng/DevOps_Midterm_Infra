@@ -1,4 +1,4 @@
-name: Nightly Build Deployment
+name: Nightly Build Deployment V2
 
 on:
   schedule:
