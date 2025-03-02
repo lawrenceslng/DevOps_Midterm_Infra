@@ -29,7 +29,7 @@ jobs:
       - name: Get latest image tags and update latest tag
         id: get-tags
         env:
-          AWS_ACCOUNT_ID=${{ secrets.AWS_ACCOUNT_ID }}
+          AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
         run: |
           REPO_NAME="midterm-backend"  
           REGION="us-east-1"
