@@ -83,48 +83,22 @@ jobs:
           echo "TAG=$(date +'%Y%m%d%H%M%S')" >> $GITHUB_ENV
 
       - name: Re-tag previous image as latest
-        run: | 
-          REPO_NAME="midterm-backend"
-          REGION="us-east-1"
-          ACCOUNT_ID=${{ secrets.AWS_ACCOUNT_ID }}
-
-          IMAGE_DIGEST=$(aws ecr batch-get-image --repository-name $REPO_NAME --region $REGION --image-ids imageTag=$PREVIOUS_FE_TAG --query 'images[].imageIdentifier.imageDigest' --output text)
-
-          docker pull $ACCOUNT_ID.dkr.ecr.$REGION.amazonaws.com/$REPO_NAME@$IMAGE_DIGEST
-          docker tag $ACCOUNT_ID.dkr.ecr.$REGION.amazonaws.com/$REPO_NAME@$IMAGE_DIGEST $ACCOUNT_ID.dkr.ecr.$REGION.amazonaws.com/$REPO_NAME:latest
-          docker push $ACCOUNT_ID.dkr.ecr.$REGION.amazonaws.com/$REPO_NAME:latest
-
-          REPO_NAME="midterm-frontend"
+        run: |
+          REPO_NAME="midterm-backend"  
           REGION="us-east-1"
 
-          IMAGE_DIGEST=$(aws ecr batch-get-image --repository-name $REPO_NAME --region $REGION --image-ids imageTag=$PREVIOUS_FE_TAG --query 'images[].imageIdentifier.imageDigest' --output text)
+          aws ecr batch-get-image --repository-name $REPO_NAME --region $REGION --image-ids imageTag=$PREVIOUS_BE_TAG --query 'images[].imageManifest' --output text > image-manifest.json
 
-          docker pull $ACCOUNT_ID.dkr.ecr.$REGION.amazonaws.com/$REPO_NAME@$IMAGE_DIGEST
-          docker tag $ACCOUNT_ID.dkr.ecr.$REGION.amazonaws.com/$REPO_NAME@$IMAGE_DIGEST $ACCOUNT_ID.dkr.ecr.$REGION.amazonaws.com/$REPO_NAME:latest
-          docker push $ACCOUNT_ID.dkr.ecr.$REGION.amazonaws.com/$REPO_NAME:latest
+          aws ecr put-image --repository-name $REPO_NAME --region $REGION --image-tag latest --image-manifest file://image-manifest.json
+          aws ecr put-image --repository-name $REPO_NAME --region $REGION --image-tag $TAG --image-manifest file://image-manifest.json
 
+          REPO_NAME="midterm-frontend"  
+          REGION="us-east-1"
 
-      # - name: Re-tag previous image as latest
-      #   run: |
-      #     REPO_NAME="midterm-backend"
-      #     REGION="us-east-1"
+          aws ecr batch-get-image --repository-name $REPO_NAME --region $REGION --image-ids imageTag=$PREVIOUS_FE_TAG --query 'images[].imageManifest' --output text > image-manifest.json
 
-      #     # Get the image digest for the previous backend image
-      #     IMAGE_DIGEST=$(aws ecr batch-get-image --repository-name $REPO_NAME --region $REGION --image-ids imageTag=$PREVIOUS_BE_TAG --query 'images[].imageIdentifier.imageDigest' --output text)
-
-      #     # Add new tags to the existing image using its digest
-      #     aws ecr put-image --repository-name $REPO_NAME --region $REGION --image-tag latest --image-digest $IMAGE_DIGEST
-      #     aws ecr put-image --repository-name $REPO_NAME --region $REGION --image-tag $TAG --image-digest $IMAGE_DIGEST
-
-      #     REPO_NAME="midterm-frontend"
-      #     REGION="us-east-1"
-
-      #     # Get the image digest for the previous frontend image
-      #     IMAGE_DIGEST=$(aws ecr batch-get-image --repository-name $REPO_NAME --region $REGION --image-ids imageTag=$PREVIOUS_FE_TAG --query 'images[].imageIdentifier.imageDigest' --output text)
-
-      #     # Add new tags to the existing image using its digest
-      #     aws ecr put-image --repository-name $REPO_NAME --region $REGION --image-tag latest --image-digest $IMAGE_DIGEST
-      #     aws ecr put-image --repository-name $REPO_NAME --region $REGION --image-tag $TAG --image-digest $IMAGE_DIGEST
+          aws ecr put-image --repository-name $REPO_NAME --region $REGION --image-tag latest --image-manifest file://image-manifest.json
+          aws ecr put-image --repository-name $REPO_NAME --region $REGION --image-tag $TAG --image-manifest file://image-manifest.json
 
       - name: Cleanup local Docker images
         run: docker system prune -af
