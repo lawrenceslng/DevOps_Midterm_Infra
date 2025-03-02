@@ -35,7 +35,7 @@ if curl -f http://localhost > /dev/null 2>&1; then
   echo "Frontend is accessible"
   # Check if backend is accessible and returns correct health message
   HEALTH_RESPONSE=$(curl -s http://localhost:3001/api/health)
-  if [[ "$HEALTH_RESPONSE" == *"Health status OK!!"* ]]; then
+  if [[ "$HEALTH_RESPONSE" == "Health status OK!!" ]]; then
     echo "Backend is accessible and healthy"
     # Trigger Deploy to QA workflow
     trigger_workflow "Deploy_To_QA.yaml"
