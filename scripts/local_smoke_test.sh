@@ -5,6 +5,7 @@ GITHUB_TOKEN=$(cat github_token.txt) # might need to see if $ is somehow prepend
 AWS_ACCESS_KEY_ID=$(cat aws_access_key_id.txt) # might need to see if $ is somehow prepended
 AWS_SECRET_ACCESS_KEY=$(cat aws_secret_access_key.txt) # might need to see if $ is somehow prepended
 AWS_SESSION_TOKEN=$(cat aws_session_token.txt) # might need to see if $ is somehow prepended
+INSTANCE_ID=$(cat current_instance_id.txt)
 
 # Function to trigger GitHub workflow
 trigger_workflow() {
@@ -24,9 +25,9 @@ terminate_instance() {
   aws configure set aws_secret_access_key ${AWS_SECRET_ACCESS_KEY}
   aws configure set aws_session_token ${AWS_SESSION_TOKEN}
   # Get instance ID from metadata service
-  INSTANCE_ID=$(curl -s http://169.254.169.254/latest/meta-data/instance-id)
+  # INSTANCE_ID=$(curl -s http://169.254.169.254/latest/meta-data/instance-id)
   # Terminate the instance
-  aws ec2 terminate-instances --instance-id "${INSTANCE_ID}"
+  aws ec2 terminate-instances --instance-id ${INSTANCE_ID}
 }
 
 # Check if frontend is accessible

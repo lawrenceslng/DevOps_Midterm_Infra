@@ -88,6 +88,7 @@ jobs:
           DB_NAME: ${{ secrets.TEMP_DB_NAME }}
           DB_PASSWORD: ${{ secrets.TEMP_DB_PASSWORD }}
           DB_USER: ${{ secrets.TEMP_DB_USER }}
+          INSTANCE_ID: ${{ env.INSTANCE_ID }}
         run: ./infra/scripts/copy_to_temp_ec2.sh
 
       - name: Set DateTime Tag

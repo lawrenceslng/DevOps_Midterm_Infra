@@ -52,6 +52,7 @@ echo "$GITHUB_PAT" > deploy/github_token.txt
 echo "$AWS_ACCESS_KEY_ID" > deploy/aws_access_key_id.txt
 echo "$AWS_SECRET_ACCESS_KEY" > deploy/aws_secret_access_key.txt
 echo "$AWS_SESSION_TOKEN" > deploy/aws_session_token.txt
+echo "$INSTANCE_ID" > deploy/current_instance_id.txt
 
 # Copy all files to EC2
 scp -i key.pem -o StrictHostKeyChecking=no -r deploy/* ec2-user@${PUBLIC_IP}:/home/ec2-user/
