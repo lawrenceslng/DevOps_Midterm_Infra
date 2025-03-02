@@ -26,7 +26,7 @@ jobs:
       - name: Get latest and previous image tags for both repos
         id: get-tags
         run: |
-          REPO_NAME="midterm-backend"  # Change this to your repo name
+          REPO_NAME="midterm-backend"  
           REGION="us-east-1"
 
           # Fetch all image tags sorted by pushedAt timestamp
@@ -45,7 +45,7 @@ jobs:
           echo "LATEST_BE_TAG=$LATEST_BE_TAG" >> $GITHUB_ENV
           echo "PREVIOUS_BE_TAG=$PREVIOUS_BE_TAG" >> $GITHUB_ENV
 
-          REPO_NAME="midterm-frontend"  # Change this to your repo name
+          REPO_NAME="midterm-frontend"  
           REGION="us-east-1"
 
           # Fetch all image tags sorted by pushedAt timestamp
@@ -66,13 +66,13 @@ jobs:
 
       - name: Delete latest image tag from both repos
         run: |
-          REPO_NAME="midterm-backend"  # Change this
+          REPO_NAME="midterm-backend"  
           REGION="us-east-1"
 
           aws ecr batch-delete-image --repository-name $REPO_NAME --region $REGION --image-ids imageTag=$LATEST_BE_TAG
           aws ecr batch-delete-image --repository-name $REPO_NAME --region $REGION --image-ids imageTag=latest
 
-          REPO_NAME="midterm-frontend"  # Change this
+          REPO_NAME="midterm-frontend"  
           REGION="us-east-1"
 
           aws ecr batch-delete-image --repository-name $REPO_NAME --region $REGION --image-ids imageTag=$LATEST_FE_TAG
@@ -84,7 +84,7 @@ jobs:
 
       - name: Re-tag previous image as latest
         run: |
-          REPO_NAME="midterm-backend"  # Change this
+          REPO_NAME="midterm-backend"  
           REGION="us-east-1"
 
           aws ecr batch-get-image --repository-name $REPO_NAME --region $REGION --image-ids imageTag=$PREVIOUS_BE_TAG --query 'images[].imageManifest' --output text > image-manifest.json
@@ -92,7 +92,7 @@ jobs:
           aws ecr put-image --repository-name $REPO_NAME --region $REGION --image-tag latest --image-manifest file://image-manifest.json
           aws ecr put-image --repository-name $REPO_NAME --region $REGION --image-tag $TAG --image-manifest file://image-manifest.json
 
-          REPO_NAME="midterm-frontend"  # Change this
+          REPO_NAME="midterm-frontend"  
           REGION="us-east-1"
 
           aws ecr batch-get-image --repository-name $REPO_NAME --region $REGION --image-ids imageTag=$PREVIOUS_FE_TAG --query 'images[].imageManifest' --output text > image-manifest.json

@@ -52,12 +52,11 @@ jobs:
     runs-on: self-hosted
 
     steps:
-      - name: Pull from ECR and Deploy
+      - name: Run the setup script on machine
+        env:
+          AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
+          AWS_ACCOUNT_REGION: ${{ secrets.AWS_ACCOUNT_REGION }}
         run: |
-          echo "deploying to qa"
-          aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com
-          docker compose down || true
-          echo "update compose"
-          docker compose up -d
+          /home/ec2-user/setup_QA_EC2.sh
       
 

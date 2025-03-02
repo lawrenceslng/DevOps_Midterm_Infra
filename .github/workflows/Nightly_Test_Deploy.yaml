@@ -55,16 +55,8 @@ jobs:
         run: |
           cd app-repo/client && npm ci && npm run build
 
-      - name: Debug Build Output
-        run: ls -la app-repo/client/build
-
-
-      # - name: Upload frontend build artifact
-      #   uses: actions/upload-artifact@v4
-      #   with:
-      #     name: frontend-build
-      #     path: client/build/
-      #     overwrite: true
+      # - name: Debug Build Output
+        # run: ls -la app-repo/client/build
 
       - name: Wait for EC2 instance to be ready
         run: |
@@ -77,9 +69,10 @@ jobs:
 
       - name: Make scripts executable
         run: |
-          chmod +x infra/scripts/setup_ec2.sh
+          chmod +x infra/scripts/setup_temp_ec2.sh
           chmod +x infra/scripts/local_smoke_test.sh
           chmod +x infra/scripts/copy_to_temp_ec2.sh
+          chmod +x infra/scripts/build_and_push.sh
 
       - name: Copy files to EC2
         env:
@@ -100,10 +93,6 @@ jobs:
       - name: Set DateTime Tag
         run: |
           echo "TAG=$(date +'%Y%m%d%H%M%S')" >> $GITHUB_ENV
-     
-      - name: Make build-and-push.sh executable
-        run: |
-          chmod +x infra/scripts/build_and_push.sh
 
       # - name: Try basics
       #   run: |
@@ -127,7 +116,7 @@ jobs:
           echo "${{ secrets.SSH_KEY }}" | base64 --decode > key.pem
           chmod 600 key.pem
           ssh -i key.pem -o StrictHostKeyChecking=no ec2-user@$PUBLIC_IP '
-            nohup /home/ec2-user/setup_ec2.sh && /home/ec2-user/local_smoke_test.sh > setup.log 2>&1 & exit'
+            nohup /home/ec2-user/setup_temp_ec2.sh && /home/ec2-user/local_smoke_test.sh > setup.log 2>&1 & exit'
 
 ####################################
       # - name: Remove Temp EC2
