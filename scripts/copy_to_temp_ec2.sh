@@ -26,7 +26,7 @@ cp app-repo/setup.sql deploy/
 cp infra/configurations/docker-compose.temp.yml deploy/docker-compose.yml
 cp infra/configurations/temp-ec2-nginx.conf deploy/nginx.conf
 # cp infra/configurations/temp-ec2-nginx.conf_OLD deploy/
-cp infra/scripts/setup_ec2.sh deploy/
+cp infra/scripts/setup_temp_ec2.sh deploy/
 cp infra/scripts/local_smoke_test.sh deploy/
 
 # # Create .env file for docker-compose
