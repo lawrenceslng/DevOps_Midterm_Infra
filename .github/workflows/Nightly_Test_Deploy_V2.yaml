@@ -70,8 +70,8 @@ jobs:
       - name: Make scripts executable
         run: |
           chmod +x infra/scripts/setup_temp_ec2.sh
-          chmod +x infra/scripts/local_smoke_test.sh
-          chmod +x infra/scripts/copy_to_temp_ec2.sh
+          chmod +x infra/scripts/local_smoke_test_V2.sh
+          chmod +x infra/scripts/copy_to_temp_ec2_V2.sh
           chmod +x infra/scripts/build_and_push_V2.sh
 
       - name: Copy files to EC2
@@ -89,7 +89,7 @@ jobs:
           DB_PASSWORD: ${{ secrets.TEMP_DB_PASSWORD }}
           DB_USER: ${{ secrets.TEMP_DB_USER }}
           INSTANCE_ID: ${{ env.INSTANCE_ID }}
-        run: ./infra/scripts/copy_to_temp_ec2.sh
+        run: ./infra/scripts/copy_to_temp_ec2_V2.sh
 
       - name: Set DateTime Tag
         run: |
@@ -117,7 +117,7 @@ jobs:
           echo "${{ secrets.SSH_KEY }}" | base64 --decode > key.pem
           chmod 600 key.pem
           ssh -i key.pem -o StrictHostKeyChecking=no ec2-user@$PUBLIC_IP '
-            nohup /home/ec2-user/setup_temp_ec2.sh && /home/ec2-user/local_smoke_test.sh > setup.log 2>&1 & exit'
+            nohup /home/ec2-user/setup_temp_ec2.sh && /home/ec2-user/local_smoke_test_V2.sh > setup.log 2>&1 & exit'
 
 ####################################
       # - name: Remove Temp EC2
