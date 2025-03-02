@@ -1,8 +1,8 @@
 name: Nightly Build Deployment
 
 on:
-  # schedule:
-    # - cron: "0 8 * * *"  # Runs every day at 12 AM Pacific time
+  schedule:
+    - cron: "0 8 * * *"  # Runs every day at 12 AM Pacific time
   workflow_dispatch:  # Allows manual trigger
 
 jobs:
@@ -72,7 +72,7 @@ jobs:
           chmod +x infra/scripts/setup_temp_ec2.sh
           chmod +x infra/scripts/local_smoke_test.sh
           chmod +x infra/scripts/copy_to_temp_ec2.sh
-          chmod +x infra/scripts/build_and_push.sh
+          chmod +x infra/scripts/build_and_push_V2.sh
 
       - name: Copy files to EC2
         env:
@@ -110,7 +110,7 @@ jobs:
           TAG: ${{ env.TAG }}
         run: |
           echo "Running build and push script"
-          ./infra/scripts/build_and_push.sh app-repo
+          ./infra/scripts/build_and_push_V2.sh app-repo
 
       - name: Setup EC2
         run: |

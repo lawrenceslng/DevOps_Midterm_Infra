@@ -1,0 +1,74 @@
+name: Delete Image From ECR
+on:
+  workflow_dispatch:  # Allows manual trigger
+
+jobs:
+  push-to-ecr:
+    name: Delete Images From ECR
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Infrastructure Repository
+        uses: actions/checkout@v4
+      
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: ${{ secrets.AWS_ACCOUNT_REGION }}
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Get latest and previous image tags for both repos
+        id: get-tags
+        run: |
+          REPO_NAME="midterm-backend"  
+          REGION="us-east-1"
+
+          # Fetch all image tags sorted by pushedAt timestamp
+          IMAGES_JSON=$(aws ecr describe-images --repository-name $REPO_NAME --region $REGION --query "imageDetails | sort_by(@, &imagePushedAt) | reverse(@)" --output json)
+          
+          # Extract tags
+          IMAGE_TAGS=($(echo $IMAGES_JSON | jq -r '.[].imageTags[]' | sort -r))
+
+          # Identify latest and previous tag
+          LATEST_BE_TAG="${IMAGE_TAGS[1]}"
+
+          echo "Latest BE Tag: $LATEST_BE_TAG"
+
+          echo "LATEST_BE_TAG=$LATEST_BE_TAG" >> $GITHUB_ENV
+
+          REPO_NAME="midterm-frontend"  
+          REGION="us-east-1"
+
+          # Fetch all image tags sorted by pushedAt timestamp
+          IMAGES_JSON=$(aws ecr describe-images --repository-name $REPO_NAME --region $REGION --query "imageDetails | sort_by(@, &imagePushedAt) | reverse(@)" --output json)
+          
+          # Extract tags
+          IMAGE_TAGS=($(echo $IMAGES_JSON | jq -r '.[].imageTags[]' | sort -r))
+
+          # Identify latest and previous tag
+          LATEST_FE_TAG="${IMAGE_TAGS[1]}"
+
+          echo "Latest FE Tag: $LATEST_FE_TAG"
+
+          echo "LATEST_FE_TAG=$LATEST_FE_TAG" >> $GITHUB_ENV
+
+      - name: Delete latest image tag from both repos
+        run: |
+          REPO_NAME="midterm-backend"  
+          REGION="us-east-1"
+
+          aws ecr batch-delete-image --repository-name $REPO_NAME --region $REGION --image-ids imageTag=$LATEST_BE_TAG
+
+          REPO_NAME="midterm-frontend"  
+          REGION="us-east-1"
+
+          aws ecr batch-delete-image --repository-name $REPO_NAME --region $REGION --image-ids imageTag=$LATEST_FE_TAG
+
+      - name: Cleanup local Docker images
+        run: docker system prune -af

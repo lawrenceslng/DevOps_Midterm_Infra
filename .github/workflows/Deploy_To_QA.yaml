@@ -4,8 +4,8 @@ on:
   workflow_dispatch:  # Allows manual trigger
 
 jobs:
-  # send-docker-compose:
-  #   name: Send Docker Compose to QA Machine
+  # tag-latest:
+  #   name: Find latest image and tag it as latest
   #   runs-on: ubuntu-latest
 
   #   steps:
@@ -21,6 +21,10 @@ jobs:
   #         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
   #         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
   #         aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+      
+  #     - name: Login to Amazon ECR
+  #       id: login-ecr
+  #       uses: aws-actions/amazon-ecr-login@v2
 
   #     - name: Set up SSH key
   #       run: |

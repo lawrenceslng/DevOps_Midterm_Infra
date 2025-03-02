@@ -1,0 +1,100 @@
+name: Deploy to QA
+
+on:
+  workflow_dispatch:  # Allows manual trigger
+
+jobs:
+  tag-latest:
+    name: Find latest image and tag it as latest
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Infrastructure Repository
+        uses: actions/checkout@v4
+        with:
+          path: infra
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: ${{ secrets.AWS_ACCOUNT_REGION }}
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+      
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Get latest image tags and update latest tag
+        id: get-tags
+        run: |
+          REPO_NAME="midterm-backend"  
+          REGION="us-east-1"
+
+          # Fetch all image tags sorted by pushedAt timestamp
+          IMAGES_JSON=$(aws ecr describe-images --repository-name $REPO_NAME --region $REGION --query "imageDetails | sort_by(@, &imagePushedAt) | reverse(@)" --output json)
+          
+          # Get the most recent image tag
+          LATEST_TAG=$(echo $IMAGES_JSON | jq -r '.[0].imageTags[0]')
+          
+          # Get the image digest for the most recent image
+          IMAGE_DIGEST=$(echo $IMAGES_JSON | jq -r '.[0].imageDigest')
+          
+          echo "Most recent tag: $LATEST_TAG"
+          echo "Image digest: $IMAGE_DIGEST"
+          
+          # Tag the most recent image as latest
+          aws ecr put-image \
+            --repository-name $REPO_NAME \
+            --image-tag "latest" \
+            --image-manifest $(aws ecr batch-get-image \
+              --repository-name $REPO_NAME \
+              --image-ids imageDigest=$IMAGE_DIGEST \
+              --query 'images[].imageManifest' \
+              --output text)
+
+          REPO_NAME="midterm-frontend"  
+          REGION="us-east-1"
+
+          # Fetch all image tags sorted by pushedAt timestamp
+          IMAGES_JSON=$(aws ecr describe-images --repository-name $REPO_NAME --region $REGION --query "imageDetails | sort_by(@, &imagePushedAt) | reverse(@)" --output json)
+          
+          # Get the most recent image tag
+          LATEST_TAG=$(echo $IMAGES_JSON | jq -r '.[0].imageTags[0]')
+          
+          # Get the image digest for the most recent image
+          IMAGE_DIGEST=$(echo $IMAGES_JSON | jq -r '.[0].imageDigest')
+          
+          echo "Most recent tag: $LATEST_TAG"
+          echo "Image digest: $IMAGE_DIGEST"
+          
+          # Tag the most recent image as latest
+          aws ecr put-image \
+            --repository-name $REPO_NAME \
+            --image-tag "latest" \
+            --image-manifest $(aws ecr batch-get-image \
+              --repository-name $REPO_NAME \
+              --image-ids imageDigest=$IMAGE_DIGEST \
+              --query 'images[].imageManifest' \
+              --output text)
+
+  deploy-to-qa:
+    name: Deploy build to QA
+    runs-on: self-hosted
+
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          aws-region: ${{ secrets.AWS_ACCOUNT_REGION }}
+      
+      - name: Run the setup script on machine
+        env:
+          AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
+          AWS_ACCOUNT_REGION: ${{ secrets.AWS_ACCOUNT_REGION }}
+        run: |
+          /home/ec2-user/setup_QA_EC2.sh
