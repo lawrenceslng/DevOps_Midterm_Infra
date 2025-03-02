@@ -43,16 +43,14 @@ jobs:
           
           echo "Most recent tag: $LATEST_TAG"
           echo "Image digest: $IMAGE_DIGEST"
+
+          aws ecr batch-get-image --repository-name $REPO_NAME --region $REGION --image-ids imageTag=$LATEST_TAG --query 'images[].imageManifest' --output text > image-manifest.json
           
           # Tag the most recent image as latest
           aws ecr put-image \
             --repository-name $REPO_NAME \
             --image-tag "latest" \
-            --image-manifest $(aws ecr batch-get-image \
-              --repository-name $REPO_NAME \
-              --image-ids imageDigest=$IMAGE_DIGEST \
-              --query 'images[].imageManifest' \
-              --output text)
+            --image-manifest file://image-manifest.json
 
           REPO_NAME="midterm-frontend"  
           REGION="us-east-1"
@@ -69,15 +67,13 @@ jobs:
           echo "Most recent tag: $LATEST_TAG"
           echo "Image digest: $IMAGE_DIGEST"
           
+          aws ecr batch-get-image --repository-name $REPO_NAME --region $REGION --image-ids imageTag=$LATEST_TAG --query 'images[].imageManifest' --output text > image-manifest.json
+
           # Tag the most recent image as latest
           aws ecr put-image \
             --repository-name $REPO_NAME \
             --image-tag "latest" \
-            --image-manifest $(aws ecr batch-get-image \
-              --repository-name $REPO_NAME \
-              --image-ids imageDigest=$IMAGE_DIGEST \
-              --query 'images[].imageManifest' \
-              --output text)
+            --image-manifest file://image-manifest.json
 
   deploy-to-qa:
     name: Deploy build to QA
