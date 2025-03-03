@@ -107,4 +107,4 @@ jobs:
           echo "${{ secrets.SSH_KEY }}" | base64 --decode > key.pem
           chmod 600 key.pem
           ssh -i key.pem -o StrictHostKeyChecking=no ec2-user@$PUBLIC_IP '
-            nohup /home/ec2-user/setup_temp_ec2.sh && /home/ec2-user/local_smoke_test_V2.sh > setup.log 2>&1 & exit'
+            nohup bash -c "/home/ec2-user/setup_temp_ec2.sh && /home/ec2-user/local_smoke_test_V2.sh" > setup.log 2>&1 &'
