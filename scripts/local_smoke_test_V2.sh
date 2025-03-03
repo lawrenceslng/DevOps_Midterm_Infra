@@ -38,7 +38,7 @@ if curl -f http://localhost > /dev/null 2>&1; then
     # Trigger Deploy to QA workflow
     trigger_workflow "Deploy_To_QA_V2.yaml"
     # Terminate the instance
-    # terminate_instance
+    terminate_instance
     exit 0
   else
     echo "Backend health check failed: Unexpected response"
@@ -46,7 +46,7 @@ if curl -f http://localhost > /dev/null 2>&1; then
     # Trigger Delete from ECR workflow
     trigger_workflow "Delete_From_ECR_V2.yaml"
     # Terminate the instance
-    # terminate_instance
+    terminate_instance
     exit 1
   fi
 else
@@ -54,6 +54,6 @@ else
   # Trigger Delete from ECR workflow
   trigger_workflow "Delete_From_ECR_V2.yaml"
   # Terminate the instance
-  # terminate_instance
+  terminate_instance
   exit 1
 fi
