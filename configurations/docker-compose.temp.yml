@@ -32,7 +32,7 @@ services:
   nginx:
     image: nginx:latest
     volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf  # Mount your custom NGINX config file
+      - ./nginx.conf:/etc/nginx/nginx.conf  # Mount the custom NGINX config file
       - ./frontend:/usr/share/nginx/html  # Mount the React build folder as the static file location
     ports:
       - "80:80"  # Expose port 80 to the host for external access

@@ -1,8 +1,9 @@
 name: Nightly Build Deployment
 
 on:
+  # Configuring this to not run every night and consume minutes
   # schedule:
-    # - cron: "0 8 * * *"  # Runs every day at 12 AM Pacific time
+  #   - cron: "0 8 * * *"  # Runs every day at 12 AM Pacific time
   workflow_dispatch:  # Allows manual trigger
 
 jobs:
@@ -55,9 +56,6 @@ jobs:
         run: |
           cd app-repo/client && npm ci && npm run build
 
-      # - name: Debug Build Output
-        # run: ls -la app-repo/client/build
-
       - name: Wait for EC2 instance to be ready
         run: |
           aws ec2 wait instance-running --instance-ids $INSTANCE_ID
@@ -95,14 +93,6 @@ jobs:
         run: |
           echo "TAG=$(date +'%Y%m%d%H%M%S')" >> $GITHUB_ENV
 
-      # - name: Try basics
-      #   run: |
-      #     docker build -t devops-midterm-frontend:latest -t devops-midterm-frontend:${{ env.TAG }} -f app-repo/client/Dockerfile app-repo
-      #     docker tag devops-midterm-frontend:latest "${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_ACCOUNT_REGION }}.amazonaws.com/midterm-frontend:latest"
-      #     docker tag devops-midterm-frontend:"${{ env.TAG }}" "${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_ACCOUNT_REGION }}.amazonaws.com/midterm-frontend:${{ env.TAG }}"
-      #     docker push "${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_ACCOUNT_REGION }}.amazonaws.com/midterm-frontend:latest"
-      #     docker push "${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_ACCOUNT_REGION }}.amazonaws.com/midterm-frontend:${{ env.TAG }}"
-
       - name: Run Build and Push Script
         env:
           AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
@@ -118,80 +108,3 @@ jobs:
           chmod 600 key.pem
           ssh -i key.pem -o StrictHostKeyChecking=no ec2-user@$PUBLIC_IP '
             nohup /home/ec2-user/setup_temp_ec2.sh && /home/ec2-user/local_smoke_test.sh > setup.log 2>&1 & exit'
-
-####################################
-      # - name: Remove Temp EC2
-      #   if: always()
-      #   run: |
-      #     aws ec2 terminate-instances --instance-ids $INSTANCE_ID
-
-   ### If tests success, push to ECR + deploy to QA
-  # push-to-ecr:
-  #   name: Push to ECR
-  #   needs: build-and-test
-  #   if: success()  # Only run if tests passed
-  #   runs-on: ubuntu-latest
-
-  #   steps:
-  #     - name: Checkout Infrastructure Repository
-  #       uses: actions/checkout@v4
-  #       with:
-  #         path: infra
-
-  #     - name: Checkout App Repository
-  #       uses: actions/checkout@v4
-  #       with:
-  #         repository: lawrenceslng/DevOps_Midterm_SPA
-  #         path: app-repo
-      
-  #     - name: Configure AWS Credentials
-  #       uses: aws-actions/configure-aws-credentials@v4
-  #       with:
-  #         aws-region: ${{ secrets.AWS_ACCOUNT_REGION }}
-  #         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-  #         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-  #         aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
-
-  #     # - name: Download frontend build artifact
-  #     #   uses: actions/download-artifact@v3
-  #     #   with:
-  #     #     name: frontend-build
-  #     #     path: app-repo/client/build/
-
-  #     - name: Set DateTime Tag
-  #       run: |
-  #         echo "TAG=$(date +'%Y%m%d%H%M%S')" >> $GITHUB_ENV
-     
-  #     - name: Make build-and-push.sh executable
-  #       run: |
-  #         chmod +x infra/scripts/build_and_push.sh
-
-  #     - name: Run Build and Push Script
-  #       env:
-  #         AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
-  #         AWS_REGION: ${{ secrets.AWS_ACCOUNT_REGION }}
-  #         TAG: ${{ env.TAG }}
-  #       run: |
-  #         echo "Running build and push script"
-  #         ./infra/scripts/build_and_push.sh app-repo
-
-  # deploy-to-qa:
-  #   name: Deploy to QA EC2
-  #   needs: push-to-ecr
-  #   runs-on: self-hosted
-
-  #   steps:
-  #     - name: Pull from ECR and Deploy
-  #       run: |
-  #         echo "deploying to qa"
-  #         aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com
-  #         docker pull ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com/midterm-frontend:latest
-  #         docker pull ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com/midterm-backend:latest
-  #         docker stop frontend-container || true
-  #         docker rm frontend-container || true
-  #         docker stop backend-container || true
-  #         docker rm backend-container || true
-  #         docker run -d --name frontend-container -p 3000:3000 ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com/midterm-frontend:latest
-  #         docker run -d --name backend-container -p 3001:3001 ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com/midterm-backend:latest
-
-
